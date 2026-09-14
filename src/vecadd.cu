@@ -5,7 +5,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#define NUM_DATA 1048576
+#define NUM_DATA 1030
 
 
 __global__ void vectorAdd(int* a, int* b, int* c)
@@ -77,7 +77,7 @@ int main(void)
 
 
     // Run GPU kernel
-    vectorAdd<<<1, NUM_DATA>>>(d_a, d_b, d_c);
+    vectorAdd<<<NUM_DATA/1024, 1024>>>(d_a, d_b, d_c);
 
 
     // Copy Device -> Host
