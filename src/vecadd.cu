@@ -8,7 +8,7 @@
 #define NUM_DATA 134217728
 
 
-__global__ void vectorAdd(int* a, int* b, int* c)
+__global__ void vectorAdd(int* a, int* b, int* c, int _size)
 {
     int tId = blockIdx.x*blockDim.x + threadIdx.x;
     if (tId < _size)
