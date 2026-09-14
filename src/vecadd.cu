@@ -12,7 +12,7 @@ __global__ void vectorAdd(int* a, int* b, int* c, int _size)
 {
     int tId = blockIdx.x*blockDim.x + threadIdx.x;
     if (tId < _size)
-        c[tid] = a[tid] + b[tid];
+        c[tId] = a[tId] + b[tId];
 }
 
 
@@ -77,7 +77,7 @@ int main(void)
 
 
     // Run GPU kernel
-    dim3 dimGrid(ceil((float)NUM_DATA / 256), 1, 1)
+    dim3 dimGrid(ceil((float)NUM_DATA / 256), 1, 1);
     dim3 dimBlock(256,1,1);
     vectorAdd<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, NUM_DATA);
 
