@@ -5,14 +5,14 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#define NUM_DATA 1030
+#define NUM_DATA 134217728
 
 
 __global__ void vectorAdd(int* a, int* b, int* c)
 {
-    int tid = threadIdx.x;
-
-    c[tid] = a[tid] + b[tid];
+    int tid = blockIdx.x*blockDim.x + threadIdx.x;
+    if (tId < _size)
+        c[tid] = a[tid] + b[tid];
 }
 
 
@@ -77,7 +77,9 @@ int main(void)
 
 
     // Run GPU kernel
-    vectorAdd<<<NUM_DATA/1024, 1024>>>(d_a, d_b, d_c);
+    dim3 dimGrid(ceil((float)NUM_DATA / 256), 1, 1)
+    dim3 dimBlock(256,1,1);
+    vectorAdd<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, NUM_DATA);
 
 
     // Copy Device -> Host
