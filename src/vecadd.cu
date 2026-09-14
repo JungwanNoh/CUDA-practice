@@ -5,7 +5,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#define NUM_DATA 1024
+#define NUM_DATA 1048576
 
 
 __global__ void vectorAdd(int* a, int* b, int* c)
