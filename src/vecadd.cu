@@ -1,126 +1,70 @@
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+#define NUM_DATA 1024
 
-#define NUM_DATA 1048576
-
-
-// GPU Kernel
-__global__ void vectorAdd(const int* A, const int* B, int* C)
+__global__ void vecAdd(int* _a, int* _b, int* _c)
 {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int tID = threadIdx.x;
 
-    if (idx < NUM_DATA)
-    {
-        C[idx] = A[idx] + B[idx];
-    }
+    _c[tID] = _a[tID] + _b[tID];
 }
-
 
 int main(void)
 {
-    // ========================================
-    // 1. CPU(Host) 메모리 할당
-    // ========================================
+    int* a;
+    int* b;
+    int* c;
 
-    int* h_A = (int*)malloc(NUM_DATA * sizeof(int));
-    int* h_B = (int*)malloc(NUM_DATA * sizeof(int));
-    int* h_C = (int*)malloc(NUM_DATA * sizeof(int));
+    int* d_a;
+    int* d_b;
+    int* d_c;
 
-    // 데이터 초기화
+    int memSize = sizeof(int) * NUM_DATA;
+
+    // Host memory
+    a = new int[NUM_DATA];
+    b = new int[NUM_DATA];
+    c = new int[NUM_DATA];
+
+    memset(a, 0, memSize);
+    memset(b, 0, memSize);
+    memset(c, 0, memSize);
+
+    // Initialize
     for (int i = 0; i < NUM_DATA; i++)
     {
-        h_A[i] = i;
-        h_B[i] = i * 2;
+        a[i] = rand() % 10;
+        b[i] = rand() % 10;
     }
 
+    // Device memory
+    cudaMalloc(&d_a, memSize);
+    cudaMalloc(&d_b, memSize);
+    cudaMalloc(&d_c, memSize);
 
-    // ========================================
-    // 2. GPU(Device) 메모리 할당
-    // ========================================
+    // Host → Device
+    cudaMemcpy(d_a, a, memSize, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b, b, memSize, cudaMemcpyHostToDevice);
 
-    int* d_A;
-    int* d_B;
-    int* d_C;
+    // Kernel
+    vecAdd<<<1, NUM_DATA>>>(d_a, d_b, d_c);
 
-    cudaMalloc((void**)&d_A, NUM_DATA * sizeof(int));
-    cudaMalloc((void**)&d_B, NUM_DATA * sizeof(int));
-    cudaMalloc((void**)&d_C, NUM_DATA * sizeof(int));
+    // Device → Host
+    cudaMemcpy(c, d_c, memSize, cudaMemcpyDeviceToHost);
 
+    // Free
+    cudaFree(d_a);
+    cudaFree(d_b);
+    cudaFree(d_c);
 
-    // ========================================
-    // 3. Host → Device
-    // ========================================
-
-    cudaMemcpy(
-        d_A,
-        h_A,
-        NUM_DATA * sizeof(int),
-        cudaMemcpyHostToDevice
-    );
-
-    cudaMemcpy(
-        d_B,
-        h_B,
-        NUM_DATA * sizeof(int),
-        cudaMemcpyHostToDevice
-    );
-
-
-    // ========================================
-    // 4. Kernel 실행
-    // ========================================
-
-    int threadsPerBlock = 256;
-    int numBlocks =
-        (NUM_DATA + threadsPerBlock - 1) / threadsPerBlock;
-
-    vectorAdd<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C);
-
-    cudaDeviceSynchronize();
-
-
-    // ========================================
-    // 5. Device → Host
-    // ========================================
-
-    cudaMemcpy(
-        h_C,
-        d_C,
-        NUM_DATA * sizeof(int),
-        cudaMemcpyDeviceToHost
-    );
-
-
-    // ========================================
-    // 6. 결과 확인
-    // ========================================
-
-    for (int i = 0; i < 10; i++)
-    {
-        printf(
-            "%d + %d = %d\n",
-            h_A[i],
-            h_B[i],
-            h_C[i]
-        );
-    }
-
-
-    // ========================================
-    // 7. 메모리 해제
-    // ========================================
-
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C);
-
-    free(h_A);
-    free(h_B);
-    free(h_C);
+    delete[] a;
+    delete[] b;
+    delete[] c;
 
     return 0;
 }
