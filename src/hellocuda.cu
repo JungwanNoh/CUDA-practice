@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 
-__global__ void showThread()
+__global__ void showID()
 {
-    printf("threadIdx.x = %d\n", threadIdx.x);
+    printf(
+        "block=%d thread=%d\n",
+        blockIdx.x,
+        threadIdx.x
+    );
 }
 
 int main()
 {
-    showThread<<<1, 256>>>();
+    showID<<<3, 4>>>();
 
     cudaDeviceSynchronize();
 
