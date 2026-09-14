@@ -10,7 +10,7 @@
 
 __global__ void vectorAdd(int* a, int* b, int* c)
 {
-    int tid = blockIdx.x*blockDim.x + threadIdx.x;
+    int tId = blockIdx.x*blockDim.x + threadIdx.x;
     if (tId < _size)
         c[tid] = a[tid] + b[tid];
 }
